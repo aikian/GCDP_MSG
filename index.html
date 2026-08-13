@@ -351,9 +351,9 @@
     (Math.random() * (max - min) + min).toFixed(digits);
 
   function buildAlertBody() {
-    // 온열질환 위험 구간의 값을 매번 새로 생성
-    const bpm  = rand(90, 95, 1);            // 심박
-    const temp = rand(38.4, 40.2, 2);        // 고체온
+    // 값은 매번 새로 생성
+    const bpm  = rand(80, 90, 1);            // 심박
+    const temp = rand(36.4, 36.7, 2);        // 체온
     const lat  = rand(13.7350, 13.7385, 6);  // 방콕 인근
     const lon  = rand(100.5210, 100.5250, 6);
 
