@@ -9,15 +9,22 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="메시지">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <title>메시지</title>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* display를 지정한 요소에서도 hidden 속성이 먹도록 */
+  [hidden] { display: none !important; }
 
   :root {
     --bg: #ffffff;
     --ink: #000000;
     --ink-sub: #8c8c8c;
     --bubble: #f0f0f0;
+    --mine: #0381fe;
     --field: #f0f0f0;
     --hairline: #c9c9c9;
     /* One UI 실측 기준 (1080px 캡처 / DPR 2.75 → 393dp) */
@@ -57,6 +64,22 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* 화면 두 장(대화 목록 / 대화방)이 겹쳐 있고 좌우로 밀린다 */
+  .stage { position: relative; flex: 1 1 auto; min-height: 0; }
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    transition: transform .28s cubic-bezier(.22,1,.36,1);
+  }
+  #screenList   { transform: translateX(-26%); }
+  #screenThread { transform: none; z-index: 2; }
+  body.on-list #screenList   { transform: none; }
+  body.on-list #screenThread { transform: translateX(100%); }
+  body.no-anim .screen { transition: none; }
+
   /* ---------- app bar ---------- */
   .appbar {
     flex: 0 0 auto;
@@ -90,6 +113,8 @@
     align-items: center;
     justify-content: center;
     color: #9a9a9a;
+    border: 0;
+    padding: 0;
   }
 
   .peer {
@@ -98,7 +123,15 @@
     display: flex;
     align-items: center;
     gap: 7px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    padding: 4px 6px;
+    border-radius: 10px;
+    text-align: left;
   }
+  .peer:active { background: rgba(0,0,0,.05); }
   .peer-name {
     font-size: 20px;
     font-weight: 700;
@@ -107,6 +140,103 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* ---------- 대화 목록 ---------- */
+  .list-bar { padding: 0 8px 0 20px; }
+  .list-title {
+    flex: 1 1 auto;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .list-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 0 16px; }
+  .list-body { scrollbar-width: none; }
+  .list-body::-webkit-scrollbar { width: 0; }
+
+  .searchfield {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    margin: 2px 16px 10px;
+    padding: 0 14px;
+    border-radius: 22px;
+    background: var(--field);
+    color: #8a8a8a;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+    border: 0;
+    width: calc(100% - 32px);
+    font-family: inherit;
+  }
+  .searchfield:active { background: #e6e6e6; }
+
+  .conv {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 12px 18px;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+  }
+  .conv:active { background: #f2f2f2; }
+  .conv .avatar { width: 46px; height: 46px; }
+  .conv-text { display: block; flex: 1 1 auto; min-width: 0; }
+  .conv-top { display: flex; align-items: baseline; gap: 8px; }
+  .conv-name {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .conv-time { flex: 0 0 auto; font-size: 12.5px; color: var(--ink-sub); }
+  .conv-prev {
+    display: block;
+    margin-top: 3px;
+    font-size: 14px;
+    color: var(--ink-sub);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .badge {
+    flex: 0 0 auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #ff4b4b;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+  }
+  .fab {
+    position: absolute;
+    right: 18px;
+    bottom: 22px;
+    width: 58px;
+    height: 58px;
+    border: 0;
+    border-radius: 19px;
+    background: var(--mine);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  }
+  .fab:active { filter: brightness(.92); }
 
   /* ---------- thread ---------- */
   .thread {
@@ -168,6 +298,7 @@
     gap: 8px;
     margin-bottom: 10px;
   }
+  .row.me { justify-content: flex-end; }
   .bubble {
     max-width: 74%;
     padding: 11px 15px 12px;
@@ -181,6 +312,9 @@
     -webkit-user-select: text;
     user-select: text;
   }
+  .row.me .bubble { background: var(--mine); color: #fff; }
+  .bubble.photo { padding: 4px; background: none; }
+  .bubble.photo img { display: block; width: 100%; max-width: 220px; border-radius: 16px; }
   .stamp {
     flex: 0 0 auto;
     font-size: 12.5px;
@@ -212,103 +346,408 @@
     background: var(--field);
     display: flex;
     align-items: center;
-    padding: 0 8px 0 18px;
+    padding: 0 4px 0 16px;
   }
-  .field .spacer { flex: 1 1 auto; }
+  .field input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: none;
+    font-family: inherit;
+    font-size: 15.5px;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .field input::placeholder { color: #9a9a9a; }
+  .send { color: var(--mine); }
 
+  /* ---------- 이모지 팔레트 ---------- */
+  .emoji {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 62px;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    padding: 10px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 6px 26px rgba(0,0,0,.16);
+    border: 1px solid #eee;
+  }
+  .emoji[hidden] { display: none; }
+  .emoji button {
+    border: 0;
+    background: none;
+    font-size: 24px;
+    line-height: 1;
+    padding: 6px 0;
+    border-radius: 10px;
+  }
+  .emoji button:active { background: #f0f0f0; }
 
+  /* ---------- 설치 안내 ---------- */
+  .install {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px 9px 14px;
+    background: #eef4ff;
+    border-bottom: 1px solid #dbe6ff;
+  }
+  .install[hidden] { display: none; }
+  .install img { width: 26px; height: 26px; border-radius: 7px; flex: 0 0 auto; }
+  .install p {
+    flex: 1 1 auto;
+    font-size: 12.5px;
+    line-height: 1.35;
+    letter-spacing: -0.3px;
+    color: #2a3a5c;
+    word-break: keep-all;
+  }
+  .install .go {
+    flex: 0 0 auto;
+    height: 30px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 15px;
+    background: var(--mine);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+  }
+  .install .close {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: none;
+    color: #7b88a3;
+    border-radius: 50%;
+  }
+
+  /* ---------- 공통 오버레이 ---------- */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(0,0,0,.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    z-index: 21;
+    width: 100%;
+    max-width: 520px;
+    transform: translate(-50%, 100%);
+    background: #fff;
+    border-radius: 26px 26px 0 0;
+    padding: 8px 0 calc(12px + env(safe-area-inset-bottom));
+    transition: transform .26s cubic-bezier(.22,1,.36,1);
+    box-shadow: 0 -6px 30px rgba(0,0,0,.14);
+  }
+  .sheet.on { transform: translate(-50%, 0); }
+  .sheet .grip {
+    width: 44px;
+    height: 4px;
+    margin: 6px auto 8px;
+    border-radius: 2px;
+    background: #d6d6d6;
+  }
+  .sheet h2 {
+    padding: 6px 24px 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-sub);
+    letter-spacing: -0.3px;
+  }
+  .sheet button.item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 15px 24px;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: 16.5px;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    text-align: left;
+  }
+  .sheet button.item:active { background: #f3f3f3; }
+  .sheet button.item.danger { color: #e02f2f; }
+  .sheet button.item .tail { margin-left: auto; font-size: 13.5px; color: var(--ink-sub); }
+
+  .dialog-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 22;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background: rgba(0,0,0,.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .dialog-wrap.on { opacity: 1; pointer-events: auto; }
+  .dialog {
+    width: 100%;
+    max-width: 330px;
+    background: #fff;
+    border-radius: 26px;
+    padding: 24px 24px 10px;
+    transform: scale(.94);
+    transition: transform .18s cubic-bezier(.22,1,.36,1);
+  }
+  .dialog-wrap.on .dialog { transform: none; }
+  .dialog h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+  .dialog p {
+    margin-top: 10px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: #4b4b4b;
+    letter-spacing: -0.3px;
+    white-space: pre-line;
+    word-break: keep-all;
+  }
+  .dialog .btns { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .dialog .btns button {
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--mine);
+    padding: 12px 16px;
+    border-radius: 12px;
+    letter-spacing: -0.3px;
+  }
+  .dialog .btns button:active { background: #eef4ff; }
+  .dialog .btns button.cancel { color: #6b6b6b; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    z-index: 30;
+    transform: translate(-50%, 12px);
+    max-width: 84%;
+    padding: 12px 20px;
+    border-radius: 26px;
+    background: rgba(20,20,20,.9);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: -0.3px;
+    text-align: center;
+    word-break: keep-all;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
 </style>
 </head>
-<body>
+<body class="no-anim">
 
 <div class="phone" id="phone">
 
   <!-- 상태바는 두지 않습니다. 실기기에서는 폰 자체 상태바가 위에 표시되므로
        여기서 또 그리면 시계·배터리가 두 줄로 겹쳐 보입니다. -->
 
-  <!-- ============ app bar ============ -->
-  <div class="appbar">
-    <button class="icon-btn" aria-label="뒤로">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14.5 4.5 7 12l7.5 7.5"/>
-      </svg>
-    </button>
-
-    <div class="avatar" aria-hidden="true">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="8.4" r="3.9"/>
-        <path d="M12 13.6c-4 0-6.6 2.3-6.6 5.2h13.2c0-2.9-2.6-5.2-6.6-5.2Z"/>
-      </svg>
-    </div>
-
-    <div class="peer">
-      <div class="peer-name" id="peerName">+82 10 3232 1976</div>
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5.5 9 12 15.5 18.5 9"/>
-      </svg>
-    </div>
-
-    <button class="icon-btn" aria-label="더보기">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
+  <!-- ============ 홈 화면 추가 안내 (브라우저로 열었을 때만) ============ -->
+  <div class="install" id="installBar" hidden>
+    <img src="icon.svg" alt="">
+    <p id="installText"></p>
+    <button class="go" id="installGo" type="button">설치</button>
+    <button class="close" id="installClose" type="button" aria-label="닫기">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6L6 18"/>
       </svg>
     </button>
   </div>
 
-  <!-- ============ thread ============ -->
-  <div class="thread" id="thread">
-    <div class="spam-notice">
-      <p>저장되지 않은 번호에서 온 메시지입니다. 스미싱이나 피싱에 유의하세요.</p>
-      <div class="spam-actions">
-        <button type="button">수신 차단</button>
-        <button type="button">메시지 신고</button>
+  <div class="stage">
+
+    <!-- ============ 대화 목록 ============ -->
+    <section class="screen" id="screenList">
+      <div class="appbar list-bar">
+        <div class="list-title">메시지</div>
+        <button class="icon-btn" data-act="search" aria-label="검색">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/>
+          </svg>
+        </button>
+        <button class="icon-btn" data-act="listMore" aria-label="더보기">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
+          </svg>
+        </button>
       </div>
-    </div>
-    <div id="messages"></div>
-  </div>
 
-  <!-- ============ input bar ============ -->
-  <div class="inputbar">
-    <button class="icon-btn" aria-label="갤러리">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
-        <rect x="3" y="4.6" width="18" height="14.8" rx="2.6"/>
-        <path d="M3 16.2l4.6-4.3 4 3.6 3.4-3.2L21 17"/>
-        <circle cx="8.4" cy="9.2" r="1.5"/>
-      </svg>
-    </button>
-    <button class="icon-btn" aria-label="카메라">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
-        <path d="M3 8.4a2 2 0 0 1 2-2h2.2l1.3-2h6.9l1.3 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9Z"/>
-        <circle cx="12" cy="12.6" r="3.5"/>
-      </svg>
-    </button>
-    <button class="icon-btn" aria-label="추가">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-    </button>
+      <div class="list-body">
+        <button class="searchfield" type="button" data-act="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/>
+          </svg>
+          메시지 검색
+        </button>
 
-    <div class="field">
-      <div class="spacer"></div>
-      <button class="icon-btn" aria-label="스티커">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="12" cy="12" r="8.6"/>
-          <circle cx="9.2" cy="10.2" r="1.05" fill="currentColor" stroke="none"/>
-          <circle cx="14.8" cy="10.2" r="1.05" fill="currentColor" stroke="none"/>
-          <path d="M8.6 14.4c.9 1.2 2 1.8 3.4 1.8s2.5-.6 3.4-1.8" stroke-linecap="round"/>
+        <button class="conv" type="button" data-act="openThread">
+          <span class="avatar" aria-hidden="true">
+            <svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="8.4" r="3.9"/>
+              <path d="M12 13.6c-4 0-6.6 2.3-6.6 5.2h13.2c0-2.9-2.6-5.2-6.6-5.2Z"/>
+            </svg>
+          </span>
+          <span class="conv-text">
+            <span class="conv-top">
+              <span class="conv-name">+82 10 3232 1976</span>
+              <span class="conv-time" id="convTime"></span>
+            </span>
+            <span class="conv-prev" id="convPrev">새 메시지가 없습니다</span>
+          </span>
+          <span class="badge" id="convBadge" hidden>0</span>
+        </button>
+      </div>
+
+      <button class="fab" type="button" data-act="compose" aria-label="새 대화">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M14.5 6.5l3 3"/>
         </svg>
       </button>
-    </div>
+    </section>
 
-    <button class="icon-btn" aria-label="음성">
-      <svg width="25" height="25" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-        <path d="M3 11v2M6.4 8.4v7.2M9.8 5.4v13.2M13.2 8.4v7.2M16.6 10v4M20 7.4v9.2"/>
-      </svg>
-    </button>
+    <!-- ============ 대화방 ============ -->
+    <section class="screen" id="screenThread">
+      <div class="appbar">
+        <button class="icon-btn" type="button" data-act="back" aria-label="뒤로">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4.5 7 12l7.5 7.5"/>
+          </svg>
+        </button>
+
+        <button class="avatar" type="button" data-act="peer" aria-label="발신자 정보">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="8.4" r="3.9"/>
+            <path d="M12 13.6c-4 0-6.6 2.3-6.6 5.2h13.2c0-2.9-2.6-5.2-6.6-5.2Z"/>
+          </svg>
+        </button>
+
+        <button class="peer" type="button" data-act="peer">
+          <span class="peer-name" id="peerName">+82 10 3232 1976</span>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5.5 9 12 15.5 18.5 9"/>
+          </svg>
+        </button>
+
+        <button class="icon-btn" type="button" data-act="more" aria-label="더보기">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="thread" id="thread">
+        <div class="spam-notice" id="spamNotice">
+          <p>저장되지 않은 번호에서 온 메시지입니다. 스미싱이나 피싱에 유의하세요.</p>
+          <div class="spam-actions">
+            <button type="button" data-act="block">수신 차단</button>
+            <button type="button" data-act="report">메시지 신고</button>
+          </div>
+        </div>
+        <div id="messages"></div>
+      </div>
+
+      <div class="inputbar">
+        <button class="icon-btn" type="button" data-act="gallery" aria-label="갤러리">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+            <rect x="3" y="4.6" width="18" height="14.8" rx="2.6"/>
+            <path d="M3 16.2l4.6-4.3 4 3.6 3.4-3.2L21 17"/>
+            <circle cx="8.4" cy="9.2" r="1.5"/>
+          </svg>
+        </button>
+        <button class="icon-btn" type="button" data-act="camera" aria-label="카메라">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M3 8.4a2 2 0 0 1 2-2h2.2l1.3-2h6.9l1.3 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9Z"/>
+            <circle cx="12" cy="12.6" r="3.5"/>
+          </svg>
+        </button>
+        <button class="icon-btn" type="button" data-act="plus" aria-label="추가">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+
+        <div class="field">
+          <input id="composer" type="text" placeholder="메시지 입력" enterkeyhint="send"
+                 autocomplete="off" autocapitalize="off" autocorrect="off">
+          <button class="icon-btn" type="button" data-act="sticker" aria-label="스티커">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="12" r="8.6"/>
+              <circle cx="9.2" cy="10.2" r="1.05" fill="currentColor" stroke="none"/>
+              <circle cx="14.8" cy="10.2" r="1.05" fill="currentColor" stroke="none"/>
+              <path d="M8.6 14.4c.9 1.2 2 1.8 3.4 1.8s2.5-.6 3.4-1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <button class="icon-btn" type="button" id="btnVoice" data-act="voice" aria-label="음성 입력">
+          <svg width="25" height="25" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <path d="M3 11v2M6.4 8.4v7.2M9.8 5.4v13.2M13.2 8.4v7.2M16.6 10v4M20 7.4v9.2"/>
+          </svg>
+        </button>
+        <button class="icon-btn send" type="button" id="btnSend" data-act="send" aria-label="보내기" hidden>
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.6a9.4 9.4 0 1 0 0 18.8 9.4 9.4 0 0 0 0-18.8Zm.75 13.9h-1.5v-6.4l-2.5 2.5-1.06-1.06L12 7.23l4.31 4.31-1.06 1.06-2.5-2.5v6.4Z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="emoji" id="emojiPad" hidden></div>
+    </section>
+
   </div>
 
   <!-- 홈 인디케이터도 두지 않습니다. 상태바와 같은 이유로 폰이 직접 그립니다. -->
 </div>
+
+<!-- ============ 오버레이 ============ -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+
+<div class="dialog-wrap" id="dialogWrap" role="dialog" aria-modal="true">
+  <div class="dialog">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgBody"></p>
+    <div class="btns">
+      <button type="button" class="cancel" id="dlgCancel">취소</button>
+      <button type="button" id="dlgOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<input type="file" id="pickGallery" accept="image/*" hidden>
+<input type="file" id="pickCamera" accept="image/*" capture="environment" hidden>
 
 <script>
 (() => {
@@ -317,15 +756,29 @@
   /* =========================================================
      설정
      ========================================================= */
-  const STORAGE_KEY = "gcdp_msg_thread_v1";
+  const PEER_NUMBER  = "+82 10 3232 1976";
+  const TEL_NUMBER   = "+821032321976";
+  const STORAGE_KEY  = "gcdp_msg_thread_v1";
+  const STATE_KEY    = "gcdp_msg_state_v1";
   const DOUBLE_TAP_MS = 320;   // 두 번 터치 인정 간격
   const TAP_SLOP_PX   = 12;    // 이 이상 움직이면 스크롤로 간주
   const TAP_MAX_MS    = 260;   // 이 이상 누르면 롱프레스로 간주
+  const LONG_PRESS_MS = 480;   // 말풍선 길게 누르기
 
   const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+  const EMOJIS = ["😀","😂","😊","😍","🥲","😅","😭","😱","👍","🙏","👏","🔥",
+                  "❤️","💧","☀️","🌡️","🚑","📍","⏰","✅","❗","🆘","🏃","💦"];
 
-  const thread = document.getElementById("thread");
-  const list   = document.getElementById("messages");
+  const $ = (id) => document.getElementById(id);
+
+  const thread   = $("thread");
+  const list     = $("messages");
+  const composer = $("composer");
+  const btnSend  = $("btnSend");
+  const btnVoice = $("btnVoice");
+  const emojiPad = $("emojiPad");
+  const scrim    = $("scrim");
+  const sheet    = $("sheet");
 
   /* =========================================================
      시간 포맷
@@ -358,7 +811,6 @@
     const lon  = rand(100.5210, 100.5250, 6);
 
     return [
-      "[국외발신]",
       "SOS HELP REQUEST",
       `HR: ${bpm} bpm`,
       `TEMP: ${temp} C`,
@@ -369,25 +821,151 @@
   /* =========================================================
      저장 / 복원
      ========================================================= */
-  function load() {
+  function loadJSON(key, fallback) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
     } catch {
-      return [];
+      return fallback;
     }
   }
 
-  function save(msgs) {
+  let messages = loadJSON(STORAGE_KEY, []);
+  if (!Array.isArray(messages)) messages = [];
+
+  const state = Object.assign(
+    { blocked: false, reported: false, muted: false, unread: 0, installOff: false },
+    loadJSON(STATE_KEY, {})
+  );
+
+  function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     } catch {
-      /* 저장 실패해도 화면 동작은 유지 */
+      // 사진이 쌓여 용량을 넘기면 사진은 저장하지 않고 텍스트만 남긴다
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(messages.map((m) => (m.img ? { ...m, img: null, body: "사진" } : m)))
+        );
+      } catch { /* 저장 실패해도 화면 동작은 유지 */ }
     }
   }
 
-  let messages = load();
+  const saveState = () => {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch {}
+  };
+
+  const buzz = (pattern) => {
+    if (!state.muted && navigator.vibrate) navigator.vibrate(pattern);
+  };
+
+  /* =========================================================
+     토스트 / 바텀시트 / 다이얼로그
+     ========================================================= */
+  const toastEl = $("toast");
+  let toastTimer = null;
+
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("on"), 1900);
+  }
+
+  function closeSheet() {
+    sheet.classList.remove("on");
+    scrim.classList.remove("on");
+  }
+
+  /** items: [{ label, tail, danger, run }] */
+  function openSheet(title, items) {
+    sheet.textContent = "";
+
+    const grip = document.createElement("div");
+    grip.className = "grip";
+    sheet.appendChild(grip);
+
+    if (title) {
+      const h = document.createElement("h2");
+      h.textContent = title;
+      sheet.appendChild(h);
+    }
+
+    for (const it of items) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = it.danger ? "item danger" : "item";
+      b.textContent = it.label;
+      if (it.tail) {
+        const t = document.createElement("span");
+        t.className = "tail";
+        t.textContent = it.tail;
+        b.appendChild(t);
+      }
+      b.addEventListener("click", () => {
+        closeSheet();
+        setTimeout(() => it.run && it.run(), 180);
+      });
+      sheet.appendChild(b);
+    }
+
+    scrim.classList.add("on");
+    requestAnimationFrame(() => sheet.classList.add("on"));
+  }
+
+  const dialogWrap = $("dialogWrap");
+  let dialogResolve = null;
+
+  function confirmDialog(title, body, okLabel) {
+    $("dlgTitle").textContent = title;
+    $("dlgBody").textContent = body;
+    $("dlgOk").textContent = okLabel || "확인";
+    dialogWrap.classList.add("on");
+    return new Promise((resolve) => { dialogResolve = resolve; });
+  }
+
+  function endDialog(result) {
+    dialogWrap.classList.remove("on");
+    if (dialogResolve) { dialogResolve(result); dialogResolve = null; }
+  }
+
+  $("dlgOk").addEventListener("click", () => endDialog(true));
+  $("dlgCancel").addEventListener("click", () => endDialog(false));
+  dialogWrap.addEventListener("click", (e) => { if (e.target === dialogWrap) endDialog(false); });
+  scrim.addEventListener("click", closeSheet);
+
+  /* =========================================================
+     화면 전환 (대화 목록 ↔ 대화방)
+     ========================================================= */
+  function showList() {
+    closeEmoji();
+    composer.blur();
+    document.body.classList.add("on-list");
+    renderConv();
+  }
+
+  function showThread() {
+    document.body.classList.remove("on-list");
+    state.unread = 0;
+    saveState();
+    renderConv();
+    scrollToBottom(false);
+  }
+
+  const onList = () => document.body.classList.contains("on-list");
+
+  function renderConv() {
+    const last = messages[messages.length - 1];
+    $("convPrev").textContent = last
+      ? (last.mine ? "나: " : "") + (last.img ? "사진" : last.body.split("\n").join(" "))
+      : "새 메시지가 없습니다";
+    $("convTime").textContent = last ? fmtStamp(new Date(last.at)) : "";
+
+    const badge = $("convBadge");
+    badge.textContent = String(state.unread);
+    badge.hidden = state.unread <= 0;
+  }
 
   /* =========================================================
      렌더링
@@ -403,17 +981,27 @@
     const date = new Date(msg.at);
 
     const row = document.createElement("div");
-    row.className = animate ? "row enter" : "row";
+    row.className = "row" + (animate ? " enter" : "") + (msg.mine ? " me" : "");
+    row.dataset.at = String(msg.at);
 
     const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = msg.body;
+    bubble.className = msg.img ? "bubble photo" : "bubble";
+    if (msg.img) {
+      const img = document.createElement("img");
+      img.src = msg.img;
+      img.alt = "사진";
+      bubble.appendChild(img);
+    } else {
+      bubble.textContent = msg.body;
+    }
 
     const stamp = document.createElement("div");
     stamp.className = "stamp";
     stamp.textContent = fmtStamp(date);
 
-    row.append(bubble, stamp);
+    if (msg.mine) row.append(stamp, bubble);
+    else row.append(bubble, stamp);
+
     list.appendChild(row);
   }
 
@@ -429,6 +1017,8 @@
       }
       appendBubble(msg, false);
     }
+    $("spamNotice").hidden = state.blocked || state.reported;
+    renderConv();
     scrollToBottom(false);
   }
 
@@ -445,11 +1035,10 @@
   }
 
   /* =========================================================
-     메시지 수신
+     메시지 추가
      ========================================================= */
-  function receiveAlert() {
-    const now = new Date();
-    const msg = { at: now.getTime(), body: buildAlertBody() };
+  function pushMessage(msg) {
+    const now = new Date(msg.at);
 
     // 날짜가 바뀌었으면 구분선 먼저
     const prev = messages[messages.length - 1];
@@ -458,26 +1047,311 @@
     }
 
     messages.push(msg);
-    save(messages);
-
+    save();
     appendBubble(msg, true);
     scrollToBottom(true);
 
-    if (navigator.vibrate) navigator.vibrate([60, 45, 60]);
+    if (onList()) {
+      if (!msg.mine) state.unread += 1;
+      saveState();
+    }
+    renderConv();
+  }
+
+  function receiveAlert() {
+    pushMessage({ at: Date.now(), body: buildAlertBody() });
+    buzz([60, 45, 60]);
+  }
+
+  function sendText(text) {
+    const body = text.trim();
+    if (!body) return;
+    pushMessage({ at: Date.now(), body, mine: true });
+    composer.value = "";
+    syncSendButton();
+    buzz(15);
+  }
+
+  /* 사진은 720px로 줄여서 담는다 — localStorage 용량 때문 */
+  function sendPhoto(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 720;
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width  = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        pushMessage({ at: Date.now(), body: "사진", mine: true, img: c.toDataURL("image/jpeg", 0.72) });
+        buzz(15);
+      };
+      img.onerror = () => toast("사진을 불러오지 못했습니다");
+      img.src = reader.result;
+    };
+    reader.onerror = () => toast("사진을 불러오지 못했습니다");
+    reader.readAsDataURL(file);
   }
 
   /* =========================================================
-     더블탭 감지 — 스크롤/롱프레스와 구분
+     이모지 팔레트
      ========================================================= */
+  for (const e of EMOJIS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = e;
+    b.addEventListener("click", () => {
+      composer.value += e;
+      syncSendButton();
+      composer.focus();
+    });
+    emojiPad.appendChild(b);
+  }
+  const closeEmoji = () => { emojiPad.hidden = true; };
+
+  /* =========================================================
+     입력바
+     ========================================================= */
+  function syncSendButton() {
+    const has = composer.value.trim().length > 0;
+    btnSend.hidden = !has;
+    btnVoice.hidden = has;
+  }
+
+  composer.addEventListener("input", syncSendButton);
+  composer.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); sendText(composer.value); }
+  });
+  composer.addEventListener("focus", closeEmoji);
+
+  $("pickGallery").addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) sendPhoto(e.target.files[0]);
+    e.target.value = "";
+  });
+  $("pickCamera").addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) sendPhoto(e.target.files[0]);
+    e.target.value = "";
+  });
+
+  /* 음성 입력 — 지원하는 브라우저에서는 실제로 받아쓴다 */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog = null;
+
+  function startVoice() {
+    if (!SR) {
+      toast("이 브라우저는 음성 입력을 지원하지 않습니다");
+      return;
+    }
+    if (recog) { recog.stop(); recog = null; return; }
+
+    recog = new SR();
+    recog.lang = "ko-KR";
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+    recog.onresult = (e) => {
+      composer.value = (composer.value + " " + e.results[0][0].transcript).trim();
+      syncSendButton();
+    };
+    recog.onerror = (e) => {
+      toast(e.error === "not-allowed" ? "마이크 권한이 필요합니다" : "음성을 인식하지 못했습니다");
+    };
+    recog.onend = () => { recog = null; };
+    try {
+      recog.start();
+      toast("듣고 있습니다…");
+    } catch {
+      recog = null;
+      toast("음성 입력을 시작하지 못했습니다");
+    }
+  }
+
+  /* =========================================================
+     차단 / 신고
+     ========================================================= */
+  async function doBlock() {
+    const ok = await confirmDialog(
+      "번호를 차단할까요?",
+      `${PEER_NUMBER}\n이 번호에서 오는 메시지를 더 이상 받지 않습니다.`,
+      "차단"
+    );
+    if (!ok) return;
+    state.blocked = true;
+    saveState();
+    $("spamNotice").hidden = true;
+    toast("번호를 차단했습니다");
+    buzz(20);
+  }
+
+  async function doReport() {
+    const ok = await confirmDialog(
+      "메시지를 신고할까요?",
+      "대화 내용이 스팸으로 신고되고 이 번호는 차단됩니다.",
+      "신고"
+    );
+    if (!ok) return;
+    state.reported = true;
+    state.blocked = true;
+    saveState();
+    $("spamNotice").hidden = true;
+    toast("스팸으로 신고했습니다");
+    buzz(20);
+  }
+
+  async function doClear() {
+    const ok = await confirmDialog(
+      "대화 내용을 삭제할까요?",
+      "이 대화의 모든 메시지가 지워집니다. 되돌릴 수 없습니다.",
+      "삭제"
+    );
+    if (!ok) return;
+    messages = [];
+    state.unread = 0;
+    save();
+    saveState();
+    renderAll();
+    toast("대화 내용을 삭제했습니다");
+  }
+
+  function copyNumber() {
+    const done = () => toast("번호를 복사했습니다");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(TEL_NUMBER).then(done, () => toast("복사하지 못했습니다"));
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = TEL_NUMBER;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch { toast("복사하지 못했습니다"); }
+      ta.remove();
+    }
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => toast("메시지를 복사했습니다"),
+        () => toast("복사하지 못했습니다")
+      );
+    } else {
+      toast("복사하지 못했습니다");
+    }
+  }
+
+  /* =========================================================
+     버튼 동작 — data-act 하나로 모아서 처리
+     ========================================================= */
+  const ACTIONS = {
+    /* 대화 목록 */
+    search:    () => toast("검색할 대화가 없습니다"),
+    listMore:  () => openSheet("메시지", [
+      { label: "대화 전체 삭제", danger: true, run: doClear },
+      { label: "차단한 번호 관리", run: () => toast(state.blocked ? `차단됨 · ${PEER_NUMBER}` : "차단한 번호가 없습니다") },
+      { label: "설정", run: () => toast("메시지 설정") }
+    ]),
+    openThread: showThread,
+    compose:   () => { showThread(); setTimeout(() => composer.focus(), 320); },
+
+    /* 대화방 앱바 */
+    back:  showList,
+    peer:  () => openSheet(PEER_NUMBER, [
+      { label: "전화 걸기", run: () => { location.href = "tel:" + TEL_NUMBER; } },
+      { label: "번호 복사", run: copyNumber },
+      { label: "연락처에 추가", run: () => toast("연락처에 추가했습니다") },
+      { label: "수신 차단", danger: true, run: doBlock }
+    ]),
+    more:  () => openSheet(null, [
+      { label: "대화 내용 삭제", danger: true, run: doClear },
+      { label: "알림", tail: state.muted ? "꺼짐" : "켜짐", run: () => {
+        state.muted = !state.muted;
+        saveState();
+        toast(state.muted ? "이 대화의 알림을 껐습니다" : "이 대화의 알림을 켰습니다");
+      } },
+      { label: "스팸 신고", run: doReport },
+      { label: "번호 복사", run: copyNumber },
+      { label: "설정", run: () => toast("메시지 설정") }
+    ]),
+
+    /* 스팸 배너 */
+    block:  doBlock,
+    report: doReport,
+
+    /* 입력바 */
+    gallery: () => $("pickGallery").click(),
+    camera:  () => $("pickCamera").click(),
+    plus:    () => openSheet("첨부", [
+      { label: "연락처", run: () => sendText("📇 연락처를 공유했습니다") },
+      { label: "위치 공유", run: () => sendText("📍 위치를 공유했습니다") },
+      { label: "파일", run: () => toast("공유할 파일이 없습니다") },
+      { label: "일정", run: () => toast("공유할 일정이 없습니다") }
+    ]),
+    sticker: () => {
+      emojiPad.hidden = !emojiPad.hidden;
+      if (!emojiPad.hidden) composer.blur();
+    },
+    voice: startVoice,
+    send:  () => sendText(composer.value)
+  };
+
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const run = ACTIONS[el.dataset.act];
+    if (run) { e.preventDefault(); run(); }
+  });
+
+  /* 이모지 팔레트는 바깥을 누르면 닫힘 */
+  document.addEventListener("pointerdown", (e) => {
+    if (emojiPad.hidden) return;
+    if (e.target.closest("#emojiPad, [data-act='sticker']")) return;
+    closeEmoji();
+  });
+
+  /* =========================================================
+     제스처
+       · 화면 더블탭      → 경고 메시지 수신 (데모 조작)
+       · 말풍선 길게 누르기 → 복사 / 삭제
+     ========================================================= */
+  const INTERACTIVE = "button, input, textarea, a, .sheet, .dialog, .install, .field, #emojiPad";
+
   let downAt = 0, downX = 0, downY = 0, lastTapAt = 0;
+  let pressTimer = null, pressed = false;
 
   document.addEventListener("pointerdown", (e) => {
     downAt = e.timeStamp;
     downX = e.clientX;
     downY = e.clientY;
+    pressed = false;
+
+    const row = e.target.closest(".row");
+    if (row && !e.target.closest(INTERACTIVE)) {
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        pressed = true;
+        lastTapAt = 0;
+        buzz(18);
+        openBubbleSheet(Number(row.dataset.at));
+      }, LONG_PRESS_MS);
+    }
   }, { passive: true });
 
+  ["pointerup", "pointercancel", "pointermove"].forEach((ev) =>
+    document.addEventListener(ev, (e) => {
+      if (ev === "pointermove" && Math.hypot(e.clientX - downX, e.clientY - downY) < TAP_SLOP_PX) return;
+      clearTimeout(pressTimer);
+    }, { passive: true })
+  );
+
   document.addEventListener("pointerup", (e) => {
+    if (pressed) { pressed = false; return; }
+
+    // 버튼·입력창·시트 위에서의 탭은 더블탭으로 세지 않는다
+    if (e.target.closest(INTERACTIVE) || scrim.classList.contains("on") ||
+        dialogWrap.classList.contains("on")) {
+      lastTapAt = 0;
+      return;
+    }
+
     const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
     const held  = e.timeStamp - downAt;
     if (moved > TAP_SLOP_PX || held > TAP_MAX_MS) {
@@ -493,32 +1367,88 @@
     }
   }, { passive: true });
 
+  function openBubbleSheet(at) {
+    const msg = messages.find((m) => m.at === at);
+    if (!msg) return;
+    openSheet(null, [
+      { label: "복사", run: () => copyText(msg.img ? "사진" : msg.body) },
+      { label: "전달", run: () => toast("전달할 대화를 선택하세요") },
+      { label: "삭제", danger: true, run: () => {
+        messages = messages.filter((m) => m.at !== at);
+        save();
+        renderAll();
+        toast("메시지를 삭제했습니다");
+      } }
+    ]);
+  }
+
   // 브라우저 기본 더블탭 확대 차단
   document.addEventListener("dblclick", (e) => e.preventDefault());
   document.addEventListener("gesturestart", (e) => e.preventDefault());
 
   /* =========================================================
-     기록 초기화 — 아바타 길게 누르기 (데모 재시작용)
+     홈 화면에 추가 — 안드로이드는 바로 설치, iOS는 안내
      ========================================================= */
-  const avatar = document.querySelector(".avatar");
-  let holdTimer = null;
+  const installBar = $("installBar");
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+                     navigator.standalone === true;
+  let deferredPrompt = null;
 
-  avatar.addEventListener("pointerdown", () => {
-    holdTimer = setTimeout(() => {
-      messages = [];
-      save(messages);
-      renderAll();
-      if (navigator.vibrate) navigator.vibrate(30);
-    }, 800);
+  function showInstallBar(text, goLabel, onGo) {
+    if (standalone || state.installOff) return;
+    $("installText").textContent = text;
+    $("installGo").textContent = goLabel;
+    $("installGo").onclick = onGo;
+    installBar.hidden = false;
+  }
+
+  $("installClose").addEventListener("click", () => {
+    installBar.hidden = true;
+    state.installOff = true;
+    saveState();
   });
-  ["pointerup", "pointerleave", "pointercancel"].forEach((ev) =>
-    avatar.addEventListener(ev, () => clearTimeout(holdTimer))
-  );
+
+  // 안드로이드(크롬·삼성 인터넷): 설치 프롬프트를 우리가 붙잡아서 버튼으로 띄운다
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBar("홈 화면에 추가하면 전체화면으로 실행됩니다.", "설치", async () => {
+      installBar.hidden = true;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (outcome !== "accepted") { installBar.hidden = false; }
+    });
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installBar.hidden = true;
+    state.installOff = true;
+    saveState();
+    toast("홈 화면에 추가했습니다");
+  });
+
+  // iOS: 사파리는 자동 설치 프롬프트가 없어서 직접 안내해야 한다
+  if (isIOS && !standalone) {
+    showInstallBar("아이폰은 공유 버튼에서 직접 추가해야 합니다.", "방법", () => {
+      openSheet("홈 화면에 추가 (아이폰)", [
+        { label: "1. 사파리 아래쪽 공유 버튼 ⬆︎ 누르기" },
+        { label: "2. 목록에서 ‘홈 화면에 추가’ 선택" },
+        { label: "3. 오른쪽 위 ‘추가’ 누르기" },
+        { label: "크롬·네이버 앱에서는 안 됩니다. 사파리로 여세요." }
+      ]);
+    });
+  }
 
   /* =========================================================
      시작
      ========================================================= */
+  $("peerName").textContent = PEER_NUMBER;
+  syncSendButton();
   renderAll();
+  requestAnimationFrame(() => document.body.classList.remove("no-anim"));
 })();
 </script>
 </body>

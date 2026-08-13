@@ -6,10 +6,14 @@ LABEL org.opencontainers.image.source="https://github.com/aikian/GCDP_MSG"
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY index.html          /usr/share/nginx/html/index.html
-COPY manifest.json       /usr/share/nginx/html/manifest.json
-COPY icon.svg            /usr/share/nginx/html/icon.svg
-COPY icon-maskable.svg   /usr/share/nginx/html/icon-maskable.svg
+COPY index.html               /usr/share/nginx/html/index.html
+COPY manifest.json            /usr/share/nginx/html/manifest.json
+COPY icon.svg                 /usr/share/nginx/html/icon.svg
+COPY icon-maskable.svg        /usr/share/nginx/html/icon-maskable.svg
+COPY icon-192.png             /usr/share/nginx/html/icon-192.png
+COPY icon-512.png             /usr/share/nginx/html/icon-512.png
+COPY icon-512-maskable.png    /usr/share/nginx/html/icon-512-maskable.png
+COPY apple-touch-icon.png     /usr/share/nginx/html/apple-touch-icon.png
 
 EXPOSE 80
 
