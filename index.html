@@ -20,10 +20,8 @@
     --bubble: #f0f0f0;
     --field: #f0f0f0;
     --hairline: #c9c9c9;
-    --battery: #2c2c2c;
     /* One UI 실측 기준 (1080px 캡처 / DPR 2.75 → 393dp) */
-    --sb-h: 33px;   /* status bar : 90px  ÷ 2.75 */
-    --ab-h: 64px;   /* app bar    : 176px ÷ 2.75 */
+    --ab-h: 64px;   /* app bar : 176px ÷ 2.75 */
   }
 
   html, body {
@@ -57,50 +55,6 @@
     overflow: hidden;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* ---------- status bar ---------- */
-  .statusbar {
-    flex: 0 0 auto;
-    height: var(--sb-h);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px 0 20px;
-  }
-  .sb-left, .sb-right { display: flex; align-items: center; gap: 6px; }
-  .sb-clock {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
-    margin-right: 4px;
-    font-variant-numeric: tabular-nums;
-  }
-  .sb-left svg, .sb-right svg { display: block; }
-  .sb-dot { width: 5px; height: 5px; border-radius: 50%; background: #1b1b1b; }
-
-  .sb-lte {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1;
-    gap: 1px;
-  }
-  .sb-lte span { font-size: 8px; font-weight: 700; letter-spacing: -0.2px; }
-
-  .sb-battery {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 30px;
-    height: 17px;
-    padding: 0 5px;
-    border-radius: 9px;
-    background: var(--battery);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
   }
 
   /* ---------- app bar ---------- */
@@ -174,11 +128,12 @@
     text-align: center;
   }
   .spam-notice p {
-    font-size: 13.5px;
+    font-size: 12.5px;
     line-height: 1.5;
     color: var(--ink-sub);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
     margin-bottom: 14px;
+    word-break: keep-all;   /* '피/싱'처럼 단어 중간에서 잘리지 않게 */
   }
   .spam-actions {
     display: flex;
@@ -276,74 +231,14 @@
     background: #1c1c1c;
   }
 
-  /* ---------- hint ---------- */
-  .hint {
-    position: absolute;
-    left: 50%;
-    bottom: 96px;
-    transform: translateX(-50%);
-    padding: 9px 18px;
-    border-radius: 20px;
-    background: rgba(0,0,0,.72);
-    color: #fff;
-    font-size: 13px;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    pointer-events: none;
-    transition: opacity .45s ease;
-  }
-  .hint.gone { opacity: 0; }
 </style>
 </head>
 <body>
 
 <div class="phone" id="phone">
 
-  <!-- ============ status bar ============ -->
-  <div class="statusbar">
-    <div class="sb-left">
-      <div class="sb-clock" id="clock">--:--</div>
-      <!-- warning triangle -->
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="#1b1b1b" aria-hidden="true">
-        <path d="M12 3.6 22 20.4H2L12 3.6Z"/>
-        <path d="M11.1 9.6h1.8v5h-1.8zM11.1 16h1.8v1.8h-1.8z" fill="#fff"/>
-      </svg>
-      <!-- brightness -->
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1b1b1b" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4.1" fill="#1b1b1b" stroke="none"/>
-        <path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/>
-      </svg>
-      <!-- cloud -->
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="#1b1b1b" aria-hidden="true">
-        <path d="M7.2 18.6h9.9a4.1 4.1 0 0 0 .5-8.2 5.6 5.6 0 0 0-10.8-1A3.9 3.9 0 0 0 7.2 18.6Z"/>
-      </svg>
-      <div class="sb-dot"></div>
-    </div>
-
-    <div class="sb-right">
-      <!-- mute -->
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#1b1b1b" aria-hidden="true">
-        <path d="M11.5 4.3 7.6 7.7H4.4v8.6h3.2l3.9 3.4V4.3Z"/>
-        <path d="M14.6 9.4 20 14.8M20 9.4l-5.4 5.4" stroke="#1b1b1b" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-      </svg>
-      <!-- LTE + data arrows -->
-      <div class="sb-lte">
-        <span>LTE</span>
-        <svg width="11" height="9" viewBox="0 0 12 10" fill="#1b1b1b" aria-hidden="true">
-          <path d="M3 0h1.4v6.4l1.4-1.4.9.9L3.7 9 1.7 5.9l.9-.9L3 6.4V0Z"/>
-          <path d="M9 10H7.6V3.6L6.2 5l-.9-.9L8.3 1l2 3.1-.9.9L9 3.6V10Z"/>
-        </svg>
-      </div>
-      <!-- signal -->
-      <svg width="18" height="14" viewBox="0 0 18 14" fill="#1b1b1b" aria-hidden="true">
-        <rect x="0"  y="9.5" width="3.2" height="4.5" rx="1"/>
-        <rect x="4.9" y="6.6" width="3.2" height="7.4" rx="1"/>
-        <rect x="9.8" y="3.4" width="3.2" height="10.6" rx="1"/>
-        <rect x="14.7" y="0"  width="3.2" height="14"  rx="1"/>
-      </svg>
-      <div class="sb-battery" id="battery">91</div>
-    </div>
-  </div>
+  <!-- 상태바는 두지 않습니다. 실기기에서는 폰 자체 상태바가 위에 표시되므로
+       여기서 또 그리면 시계·배터리가 두 줄로 겹쳐 보입니다. -->
 
   <!-- ============ app bar ============ -->
   <div class="appbar">
@@ -427,8 +322,6 @@
   </div>
 
   <div class="home-indicator"><i></i></div>
-
-  <div class="hint" id="hint">화면을 빠르게 두 번 터치하세요</div>
 </div>
 
 <script>
@@ -445,18 +338,12 @@
 
   const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-  const thread   = document.getElementById("thread");
-  const list     = document.getElementById("messages");
-  const clockEl  = document.getElementById("clock");
-  const hintEl   = document.getElementById("hint");
+  const thread = document.getElementById("thread");
+  const list   = document.getElementById("messages");
 
   /* =========================================================
      시간 포맷
      ========================================================= */
-  // 상태바: 24시간제 "10:07"
-  const fmtClock = (d) =>
-    `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
-
   // 메시지: "오전 3:27"
   const fmtStamp = (d) => {
     const h = d.getHours();
@@ -469,21 +356,6 @@
     `${d.getMonth() + 1}월 ${d.getDate()}일 ${DAYS[d.getDay()]}요일`;
 
   const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-
-  /* =========================================================
-     실시간 시계 — 분이 바뀌는 순간에 맞춰 갱신
-     ========================================================= */
-  function tickClock() {
-    const now = new Date();
-    clockEl.textContent = fmtClock(now);
-    const msToNextMinute = 60000 - (now.getSeconds() * 1000 + now.getMilliseconds());
-    setTimeout(tickClock, msToNextMinute + 20);
-  }
-  tickClock();
-  // 백그라운드에서 돌아왔을 때 즉시 보정
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) clockEl.textContent = fmtClock(new Date());
-  });
 
   /* =========================================================
      경고 메시지 본문 — 펌웨어 sendAlertSms() 포맷
@@ -606,7 +478,6 @@
     scrollToBottom(true);
 
     if (navigator.vibrate) navigator.vibrate([60, 45, 60]);
-    dismissHint();
   }
 
   /* =========================================================
@@ -657,17 +528,6 @@
   ["pointerup", "pointerleave", "pointercancel"].forEach((ev) =>
     avatar.addEventListener(ev, () => clearTimeout(holdTimer))
   );
-
-  /* =========================================================
-     안내 문구
-     ========================================================= */
-  function dismissHint() {
-    if (!hintEl.isConnected) return;
-    hintEl.classList.add("gone");
-    setTimeout(() => hintEl.remove(), 500);
-  }
-  if (messages.length) dismissHint();
-  else setTimeout(dismissHint, 6000);
 
   /* =========================================================
      시작
