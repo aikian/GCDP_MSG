@@ -93,3 +93,14 @@ push마다 자동으로 다시 빌드됩니다. 켜지 않았다면 UI에서 Red
 
 `index.html`은 nginx에서 `no-cache`로 내려가므로 재배포 후 새로고침하면
 바로 최신본이 보입니다.
+
+## 6. 아이콘을 바꿨다면
+
+아이콘(`icon*.svg`, `*.png`)은 `max-age=86400`으로 내려가고 Cloudflare가
+하루 동안 캐시합니다. 파일만 바꾸면 옛날 아이콘이 계속 나오므로,
+`index.html`과 `manifest.json`의 아이콘 URL에 붙은 `?v=` 숫자를 함께
+올려야 합니다.
+
+```bash
+grep -n "?v=" index.html manifest.json
+```
